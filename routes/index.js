@@ -8,10 +8,9 @@ const {
   handleLogout,
   handleUpload,
   showDashboard,
-  handleReject,
-  handleAccept,
   showProfile,
   handleResponse,
+  handleUpdateProfile,
 } = require("../controllers/indexController");
 
 router.get("/", (req, res) => {
@@ -25,6 +24,7 @@ router.get("/logout", handleLogout);
 
 router.post("/signup", handleSignup);
 router.post("/login", handleLogin);
+router.post('/update-profile',handleUpdateProfile);
 router.post("/upload", handleUpload);
 
 // Accept/reject request

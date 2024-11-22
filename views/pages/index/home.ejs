@@ -1,115 +1,106 @@
-<!-- Home -->
 <% layout("layouts/boilerplate.ejs") -%>
 
 <!-- Common Section for All Users -->
 <div class="container mt-5 text-center">
-  <h1 class="display-4">Welcome to Our Orphan Child Support Platform</h1>
-  <p class="lead">
-    Join us in making a difference for orphan children in need.
+  <h1 class="display-4 text-primary" style="font-weight: bolder;">Welcome to Our Orphan Child Support Platform</h1>
+  <p class="lead text-secondary">
+    Together, we can bring hope and support to orphan children in need.
   </p>
 
   <div class="mt-5">
-    <h2 class="mb-4">Why Choose Us?</h2>
-    <ul class="list-unstyled">
-      <li>👶 Connect with orphan children in need of support.</li>
-      <li>📸 Upload and manage requests to provide assistance.</li>
-      <li>🌍 Join a compassionate community.</li>
-      <li>📈 Track your contributions and impact.</li>
-    </ul>
+    <h2 class="mb-4 text-dark">Why Choose Us?</h2>
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <ul class="list-group list-group-flush text-start">
+          <li class="list-group-item"><i class="fa fa-child text-success me-2"></i>Connect with orphan children in need of support.</li>
+          <li class="list-group-item"><i class="fa fa-camera text-primary me-2"></i>Upload and manage requests to provide assistance.</li>
+          <li class="list-group-item"><i class="fa fa-globe text-warning me-2"></i>Join a compassionate global community.</li>
+          <li class="list-group-item"><i class="fa fa-chart-line text-danger me-2"></i>Track your contributions and impact.</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
-  <!-- Display login/signup buttons only for non-logged-in users -->
   <% if (!user) { %>
   <div class="mt-4">
-    <a href="/login" class="btn btn-primary btn-lg me-2">Login</a>
-    <a href="/signup" class="btn btn-warning btn-lg">Register</a>
+    <a href="/login" class="btn btn-primary btn-lg me-2 shadow">Login</a>
+    <a href="/signup" class="btn btn-warning btn-lg shadow">Register</a>
   </div>
   <% } %>
 </div>
 
 <!-- User-Specific Sections -->
 <% if (user && user.role === 'user') { %>
-<!-- Section for Logged-In Users with 'user' Role -->
 <div class="container mt-5">
-  <h1 class="text-center mb-4">Upload Photo of Orphan Child</h1>
+  <h1 class="text-center mb-4 text-info">Upload Photo of Orphan Child</h1>
   <div class="row justify-content-center">
     <div class="col-md-6">
-      <form
-        action="/upload"
-        method="POST"
-        enctype="multipart/form-data"
-        id="photoForm"
-      >
-        <div class="form-group mb-3">
-          <label for="photo" class="form-label">Upload Photo</label>
-          <input
-            type="file"
-            name="photo"
-            id="photo"
-            class="form-control"
-            accept="image/*"
-            required
-            capture
-            onchange="previewImage(event)"
-          />
-        </div>
-        <div class="mb-3">
-          <label for="response-description" class="form-label"
-            >Request Description</label
-          >
-          <textarea
-            class="form-control"
-            id="description"
-            name="description"
-            rows="3"
-            required
-          ></textarea>
-        </div>
-
-        <div class="form-group mb-3">
-          <label for="preview" class="form-label">Image Preview</label>
-          <img
-            id="imagePreview"
-            class="img-fluid rounded shadow-sm"
-            style="max-height: 300px; display: none"
-          />
-        </div>
-
-        <input type="hidden" name="latitude" id="latitude" />
-        <input type="hidden" name="longitude" id="longitude" />
-
-        <button type="submit" class="btn btn-primary w-100">
-          Upload Photo
-        </button>
-      </form>
+      <div class="card shadow rounded-4 p-4">
+        <form
+          action="/upload"
+          method="POST"
+          enctype="multipart/form-data"
+          id="photoForm"
+        >
+          <div class="form-group mb-3">
+            <label for="photo" class="form-label fw-bold text-dark">Upload Photo</label>
+            <input
+              type="file"
+              name="photo"
+              id="photo"
+              class="form-control shadow"
+              accept="image/*"
+              required
+              capture
+              onchange="previewImage(event)"
+            />
+          </div>
+          <div class="mb-3">
+            <label for="response-description" class="form-label fw-bold text-dark">Request Description</label>
+            <textarea
+              class="form-control shadow"
+              id="description"
+              name="description"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+          <div class="form-group mb-3">
+            <label for="preview" class="form-label fw-bold text-dark">Image Preview</label>
+            <img
+              id="imagePreview"
+              class="img-fluid rounded shadow-sm"
+              style="max-height: 300px; display: none"
+            />
+          </div>
+          <input type="hidden" name="latitude" id="latitude" />
+          <input type="hidden" name="longitude" id="longitude" />
+          <button type="submit" class="btn btn-info w-100 shadow">Upload Photo</button>
+        </form>
+      </div>
     </div>
   </div>
 </div>
 
 <% } else if (user && user.role === 'organization') { %>
-<!-- Section for Logged-In Users with 'organization' Role -->
 <div class="container mt-5">
-  <h1 class="text-center">Welcome, <%= user.name %>!</h1>
+  <h1 class="text-center text-success">Welcome, <%= user.name %>!</h1>
   <div class="text-center mb-4">
-    <p>You can manage orphan requests, check reports, and more.</p>
-    <a href="/dashboard/<%= user.id %>" class="btn btn-primary"
-      >Go to Dashboard</a
-    >
+    <p class="text-secondary">Manage orphan requests, check reports, and much more.</p>
+    <a href="/dashboard/<%= user.id %>" class="btn btn-success shadow">Go to Dashboard</a>
   </div>
-
   <div class="mt-4">
-    <h2>Organization Features:</h2>
-    <ul class="list-group">
-      <li class="list-group-item">Manage orphan requests</li>
-      <li class="list-group-item">View activity reports</li>
-      <li class="list-group-item">Update organizational profile</li>
+    <h2 class="text-dark">Organization Features:</h2>
+    <ul class="list-group shadow-sm">
+      <li class="list-group-item"><i class="fa fa-tasks me-2 text-primary"></i>Manage orphan requests</li>
+      <li class="list-group-item"><i class="fa fa-file-alt me-2 text-warning"></i>View activity reports</li>
+      <li class="list-group-item"><i class="fa fa-user-edit me-2 text-danger"></i>Update organizational profile</li>
     </ul>
   </div>
 </div>
 <% } %>
 
 <script>
-  // Image preview functionality
   function previewImage(event) {
     const reader = new FileReader();
     reader.onload = () => {
@@ -120,7 +111,6 @@
     reader.readAsDataURL(event.target.files[0]);
   }
 
-  // Geolocation functionality
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition((position) => {
       document.getElementById("latitude").value = position.coords.latitude;
@@ -130,39 +120,35 @@
 </script>
 
 <style>
-  /* Image Preview */
-  #imagePreview {
-    display: none;
-    margin-top: 20px;
-  }
-
-  /* Common Page Styling */
+  /* Enhancements for Visual Appeal */
   .container {
-    max-width: 800px;
-    margin: auto;
+    max-width: 900px;
     padding: 20px;
   }
 
-  /* Home Page Styling */
-  .container-fluid {
-    padding: 40px 20px;
-    background-color: #f8f9fa;
-    border-radius: 10px;
-  }
-
-  /* Landing Page Styling */
-  .display-4 {
+  h1, h2 {
     font-weight: bold;
-    color: #343a40;
   }
 
-  .lead {
-    font-size: 1.2rem;
-    color: #6c757d;
-  }
-
-  .btn-lg {
-    padding: 10px 20px;
+  .list-group-item {
     font-size: 1.1rem;
+  }
+
+  .btn {
+    font-size: 1.2rem;
+    padding: 10px 20px;
+  }
+
+  .card {
+    border: none;
+  }
+
+  .shadow {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Subtle Background */
+  body {
+    background: linear-gradient(120deg, #f8f9fa, #ffffff);
   }
 </style>

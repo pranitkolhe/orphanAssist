@@ -34,6 +34,7 @@ exports.showSignupPage = (req, res) => {
   res.render("pages/index/signup", { user: res.session?.user || null });
 };
 
+
 exports.handleSignup = (req, res) => {
   const { name, email, phone, password, role, longitude, latitude } = req.body;
 
@@ -236,3 +237,53 @@ exports.handleResponse = (req, res) => {
       .json({ success: false, message: "Error accepting request" });
   }
 };
+
+
+exports.handleUpdateProfile = (req, res) => {
+  let { name, email, phone, password } = req.body;
+  const userId = req.session.user.id;
+  if(password && password.length>0) password = bcrypt.hashSync(password, 10);
+  // Handle file upload if provided`
+  if (req.files && req.files.photo) {
+    const photo = req.files.photo; // Assuming the form field is named `photo`
+    const uploadPath = path.join(__dirname, '../public/uploads/', photo.name);
+
+    // Move the uploaded file
+    photo.mv(uploadPath, (err) => {
+      if (err) {
+        console.error('Error uploading file:', err);
+        return res.status(500).send('Error uploading file');
+      }
+
+
+      // Update user data in the database
+      const updatedData = {
+        name,
+        email,
+        phone,
+        password,
+        img: `/uploads/${photo.name}`, // Save the relative path to the database
+      };
+
+      User.findByIdAndUpdate(userId, updatedData, (err, result) => {
+        if (err) {
+          console.error('Error updating profile:', err);
+          return res.status(500).send('Error updating profile');
+        }
+        if(img) req.session.user.img = updatedData.img;
+        res.redirect('/profile/' + userId); // Redirect back to the profile page
+      });
+    });
+  } else {
+    // If no photo is uploaded, update other fields only
+    const updatedData = { name, email, phone, password };
+    User.findByIdAndUpdate(userId, updatedData, (err, result) => {
+      if (err) {
+        console.error('Error updating profile:', err);
+        return res.status(500).send('Error updating profile');
+      }
+      res.redirect('/profile/' + userId); // Redirect back to the profile page
+    });
+  }
+};
+
