@@ -1,0 +1,182 @@
+<% layout("layouts/boilerplate.ejs") -%>
+
+<div class="container mt-5">
+  <!-- Profile Header -->
+  <div class="text-center mb-5">
+    <h1 class="display-4">User Profile</h1>
+    <p class="text-muted">View and manage your profile details and requests</p>
+  </div>
+
+  <!-- Profile and Requests Section -->
+  <div class="row">
+    <!-- User Profile Section -->
+    <div class="col-md-4 mb-5">
+      <div class="card-body text-center">
+        <% if (user.photo) { %>
+          <img
+            src="<%= user.photo %>"
+            alt="User Avatar"
+            class="img-fluid rounded-circle mb-3"
+            style="width: 120px; height: 120px; object-fit: cover"
+          />
+        <% } else { %>
+          <div class="d-flex justify-content-center align-items-center">
+            <div
+            class="rounded-circle mb-3 d-flex align-items-center justify-content-center text-white bg-primary"
+            style="width: 120px; height: 120px; font-size: 36px; font-weight: bold; object-fit: cover"
+          >
+            <%= user.name ? user.name.split(" ").map(n => n[0]).join("").toUpperCase() : "U" %>
+          </div>
+          </div>
+        <% } %>
+        <h4 class="card-title mb-2"><%= user.name %></h4>
+        <p class="text-muted mb-2"><%= user.email %></p>
+        <p class="text-muted"><%= user.phone %></p>
+      
+        <!-- Rating Display -->
+        <div class="stars mb-3">
+          <% for (let i = 1; i <= 5; i++) { %>
+            <i
+              class="fa fa-star <% if (user.rating >= i) { %> text-warning <% } else { %> text-muted <% } %>"
+            ></i>
+          <% } %>
+        </div>
+        <p><strong>Rating: <%= user.rating %> / 5</strong></p>
+      </div>
+      
+    </div>
+
+    <!-- Requests Section -->
+    <div class="col-md-8">
+      <h3 class="mb-4">Your Requests</h3>
+      <div class="row">
+        <% requests.forEach((req, index) => { %>
+        <div class="col-md-6 mb-4">
+          <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-light p-3 border-bottom-0 rounded-top-4">
+              <h5 class="mb-0">Request #<%= index + 1 %></h5>
+            </div>
+            <div class="card-body">
+              <p>
+                <strong>Organization:</strong> <%= req.organization_name ||
+                "N/A" %>
+              </p>
+              <p>
+                <strong>Status:</strong>
+                <span
+                  class="badge px-3 py-2 <%= req.status === 'pending' ? 'bg-warning text-dark' : req.status === 'accepted' ? 'bg-success' : 'bg-danger' %>"
+                >
+                  <%= req.status %>
+                </span>
+              </p>
+              <p><strong>Location:</strong></p>
+              <div
+                id="map-<%= index %>"
+                class="map-container mb-2"
+                data-lat="<%= req.latitude %>"
+                data-lng="<%= req.longitude %>"
+                style="height: 150px; width: 100%; border-radius: 8px"
+              ></div>
+              <p>
+                <strong>Address:</strong>
+                <span id="address-<%= index %>">Loading...</span>
+              </p>
+              <button
+                class="btn btn-link text-primary p-0"
+                data-bs-toggle="modal"
+                data-bs-target="#detailsModal-<%= index %>"
+              >
+                View More Details
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal for Additional Details -->
+        <div
+          class="modal fade"
+          id="detailsModal-<%= index %>"
+          tabindex="-1"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Request Details</h5>
+
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div class="text-center">
+                <p>
+                  <strong>Description:</strong> <%= req.description || "N/A" %>
+                </p>
+              </div>
+
+              <div class="modal-body text-center">
+                <img src="<%= "/uploads/"+req.photo %>" alt="Request Image"
+                class="img-fluid rounded-4" />
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function initializeMaps() {
+    const mapContainers = document.querySelectorAll(".map-container");
+
+    mapContainers.forEach((mapContainer) => {
+      const lat = parseFloat(mapContainer.getAttribute("data-lat"));
+      const lng = parseFloat(mapContainer.getAttribute("data-lng"));
+
+      // Initialize Leaflet map
+      const map = L.map(mapContainer.id).setView([lat, lng], 14);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+
+      // Add marker
+      L.marker([lat, lng]).addTo(map).bindPopup("Request location").openPopup();
+
+      // Fetch address
+      const addressElement = document.getElementById(
+        `address-${mapContainer.id.split("-")[1]}`
+      );
+      fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          if (data && data.display_name) {
+            addressElement.textContent = data.display_name;
+          } else {
+            addressElement.textContent = "Address not available";
+          }
+        })
+        .catch(() => {
+          addressElement.textContent = "Error fetching address";
+        });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initializeMaps);
+</script>

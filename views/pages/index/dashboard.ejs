@@ -1,0 +1,189 @@
+<% layout("layouts/boilerplate.ejs") -%>
+
+<div class="container mt-5">
+  <h1 class="text-center mb-5 display-4 font-weight-bold text-primary">
+    Organization Dashboard
+  </h1>
+
+  <div class="row">
+    <% requests.forEach((req, index) => { %>
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card shadow-sm border-0 h-100 rounded-4">
+        <div
+          class="card-header bg-gradient-to-r from-primary to-blue-500 text-white rounded-top-4"
+        >
+          <h5 class="mb-0 text-dark">Request #<%= index + 1 %></h5>
+        </div>
+
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="stars mb-3">
+              <% for (let i = 1; i <= 5; i++) { %>
+              <i
+                class="fa fa-star <% if (req.user_rating >= i) { %> text-warning <% } else { %> text-muted <% } %>"
+              ></i>
+              <% } %>
+            </div>
+            <p><strong>User Rating: <%= req.user_rating %> / 5</strong></p>
+            <span
+              class="badge px-3 py-2 <%= req.status === 'pending' ? 'bg-warning text-dark' : req.status === 'accepted' ? 'bg-success' : 'bg-danger' %>"
+            >
+              <%= req.status %>
+            </span>
+          </div>
+          <hr />
+          <p><strong>Location:</strong></p>
+          <div
+            id="map-<%= index %>"
+            class="map-container mb-2"
+            data-lat="<%= req.latitude %>"
+            data-lng="<%= req.longitude %>"
+            style="height: 150px; width: 100%"
+          ></div>
+          <p>
+            <strong>Address:</strong>
+            <span id="address-<%= index %>">Loading...</span>
+          </p>
+          <button
+            class="btn btn-outline-primary w-100 mt-3"
+            data-bs-toggle="modal"
+            data-bs-target="#detailsModal-<%= index %>"
+          >
+            View & Respond
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Request Details -->
+    <div
+      class="modal fade"
+      id="detailsModal-<%= index %>"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Request Details</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="stars mb-3">
+                  <% for (let i = 1; i <= 5; i++) { %>
+                  <i
+                    class="fa fa-star <% if (req.user_rating >= i) { %> text-warning <% } else { %> text-muted <% } %>"
+                  ></i>
+                  <% } %>
+                </div>
+                <p><strong>Rating: <%= req.user_rating %> / 5</strong></p>
+                <p>
+                  <strong>Status:</strong>
+                  <span
+                    class="badge px-3 py-2 <%= req.status === 'pending' ? 'bg-warning text-dark' : req.status === 'accepted' ? 'bg-success' : 'bg-danger' %>"
+                  >
+                    <%= req.status %>
+                  </span>
+                </p>
+              </div>
+            </div>
+            <div class="modal-body text-center">
+              <img src="<%= "/uploads/"+req.photo %>" alt="Request Image"
+              class="img-fluid rounded-4" />
+            </div>
+
+            <p><strong>Description:</strong> <%= req.description || "N/A" %></p>
+            <% if(req.status === "pending") {%>
+            <form
+              id="response-form-<%= index %>"
+              method="POST"
+              action="/respond"
+            >
+              <input type="hidden" name="request_id" value="<%= req.id %>" />
+
+              <div class="d-flex justify-content-around">
+                <button
+                  type="submit"
+                  name="response_action"
+                  value="accepted"
+                  class="btn btn-success"
+                >
+                  Accept
+                </button>
+                <button
+                  type="submit"
+                  name="response_action"
+                  value="rejected"
+                  class="btn btn-danger"
+                >
+                  Reject
+                </button>
+              </div>
+            </form>
+
+            <% } %>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+</div>
+
+<script>
+  function initializeMaps() {
+    const mapContainers = document.querySelectorAll(".map-container");
+
+    mapContainers.forEach((mapContainer) => {
+      const lat = parseFloat(mapContainer.getAttribute("data-lat"));
+      const lng = parseFloat(mapContainer.getAttribute("data-lng"));
+
+      // Initialize Leaflet map
+      const map = L.map(mapContainer.id).setView([lat, lng], 14);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+
+      // Add marker
+      L.marker([lat, lng]).addTo(map).bindPopup("Request location").openPopup();
+
+      // Fetch address
+      const addressElement = document.getElementById(
+        `address-${mapContainer.id.split("-")[1]}`
+      );
+      fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          if (data && data.display_name) {
+            addressElement.textContent = data.display_name;
+          } else {
+            addressElement.textContent = "Address not available";
+          }
+        })
+        .catch(() => {
+          addressElement.textContent = "Error fetching address";
+        });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initializeMaps);
+</script>
